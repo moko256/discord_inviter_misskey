@@ -59,11 +59,14 @@ impl RepoMisskey {
             // Start Streaming API connection.
             let result = self
                 .client_stream
-                .start_main(|msg| async {
-                    let StreamingBodyMain::Mention(note) = msg;
+                .start_main(
+                    || async { log::info!("Connected to Misskey stream.") },
+                    |msg| async {
+                        let StreamingBodyMain::Mention(note) = msg;
 
-                    on_mention(note).await;
-                })
+                        on_mention(note).await;
+                    },
+                )
                 .await;
 
             if let Err(err) = result {

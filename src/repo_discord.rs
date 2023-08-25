@@ -71,5 +71,6 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, _data_about_bot: Ready) {
         ctx.set_activity(Activity::watching(self.watching.to_string()))
             .await;
+        log::info!("Connected to Discord stream.")
     }
 }

@@ -65,15 +65,17 @@ impl MisskeyApiStream {
         MisskeyApiStream { host, token }
     }
 
-    async fn start<'de, P, B, F>(
+    async fn start<P, B, F1, F2>(
         &self,
         send_on_start: &[StreamingMessageSend<P, B>],
-        on_message: impl Fn(StreamingMessageRecv<B>) -> F,
+        on_ready: impl Fn() -> F1,
+        on_message: impl Fn(StreamingMessageRecv<B>) -> F2,
     ) -> Result<(), Box<dyn Error>>
     where
         P: Serialize,
         B: Serialize + DeserializeOwned,
-        F: Future<Output = ()>,
+        F1: Future<Output = ()>,
+        F2: Future<Output = ()>,
     {
         let url = format!("wss://{}/streaming?i={}", self.host, self.token);
         let (ws, _) = connect_async(url).await?;
@@ -84,6 +86,8 @@ impl MisskeyApiStream {
             sink.feed(Message::Text(msg)).await?;
         }
         sink.flush().await?;
+
+        on_ready().await;
 
         while let Some(event) = stream.next().await {
             let event = event?;
@@ -108,12 +112,14 @@ impl MisskeyApiStream {
         Ok(())
     }
 
-    pub async fn start_main<F>(
+    pub async fn start_main<F1, F2>(
         &self,
-        on_event: impl Fn(StreamingBodyMain) -> F,
+        on_ready: impl Fn() -> F1,
+        on_event: impl Fn(StreamingBodyMain) -> F2,
     ) -> Result<(), Box<dyn Error>>
     where
-        F: Future<Output = ()>,
+        F1: Future<Output = ()>,
+        F2: Future<Output = ()>,
     {
         let channel = "main".to_string();
         let id = "0".to_string();
@@ -126,6 +132,7 @@ impl MisskeyApiStream {
             &[StreamingMessageSend::<(), StreamingBodyMain>::Connect(
                 connect_msg,
             )],
+            on_ready,
             |msg| async {
                 let StreamingMessageRecv::Channel(ch) = msg;
                 on_event(ch.body_inner).await;
@@ -134,12 +141,14 @@ impl MisskeyApiStream {
         .await
     }
 
-    pub async fn start_hybrid_timeline<F>(
+    pub async fn start_hybrid_timeline<F1, F2>(
         &self,
-        on_event: impl Fn(StreamingBodyTimeline) -> F,
+        on_ready: impl Fn() -> F1,
+        on_event: impl Fn(StreamingBodyTimeline) -> F2,
     ) -> Result<(), Box<dyn Error>>
     where
-        F: Future<Output = ()>,
+        F1: Future<Output = ()>,
+        F2: Future<Output = ()>,
     {
         let channel = "hybridTimeline".to_string();
         let id = "0".to_string();
@@ -152,6 +161,7 @@ impl MisskeyApiStream {
             &[StreamingMessageSend::<(), StreamingBodyTimeline>::Connect(
                 connect_msg,
             )],
+            on_ready,
             |msg| async {
                 let StreamingMessageRecv::Channel(ch) = msg;
                 on_event(ch.body_inner).await;

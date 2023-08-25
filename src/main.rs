@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use config::load_config;
+use moko256_systemd_stdio_logger as logger;
 use repo_discord::RepoDiscord;
 use repo_misskey::RepoMisskey;
 
@@ -13,6 +14,12 @@ mod simple_retry;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn Error>> {
+    logger::init([
+        logger::LoggerModuleFilterKey::Module(module_path!(), log::LevelFilter::Info),
+        logger::LoggerModuleFilterKey::Default(log::LevelFilter::Warn),
+    ])
+    .unwrap();
+
     let config = load_config();
 
     let (repo_discord, discord_task) = RepoDiscord::create_and_start(&config).await;
