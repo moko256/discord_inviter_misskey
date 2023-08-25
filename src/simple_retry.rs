@@ -43,7 +43,7 @@ fn can_reset(
     after_end: DateTime<Utc>,
     duration_reset_retry_count: Duration,
 ) -> bool {
-    return after_end > (before_start + duration_reset_retry_count);
+    after_end > (before_start + duration_reset_retry_count)
 }
 
 #[inline]
@@ -80,14 +80,14 @@ mod test {
             date_test_minutes(20),
             Duration::minutes(10),
         );
-        assert_eq!(result, true);
+        assert!(result);
 
         let result = can_reset(
             date_test_minutes(0),
             date_test_minutes(5),
             Duration::minutes(10),
         );
-        assert_eq!(result, false);
+        assert!(!result);
     }
 
     #[test]

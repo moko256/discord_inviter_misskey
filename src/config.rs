@@ -20,7 +20,7 @@ pub fn load_config() -> Config {
 }
 
 fn parse_config(config: &str) -> Config {
-    toml::from_str(&config).unwrap()
+    toml::from_str(config).unwrap()
 }
 
 #[cfg(test)]

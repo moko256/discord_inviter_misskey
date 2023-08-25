@@ -22,7 +22,7 @@ impl RepoDiscord {
     pub async fn create_and_start(config: &Config) -> (RepoDiscord, JoinHandle<()>) {
         let watching = config.discord_activity_watching.to_string();
 
-        let mut client = Client::builder(config.discord_bot_token.to_string(), Default::default())
+        let mut client = Client::builder(&config.discord_bot_token, Default::default())
             .event_handler(Handler { watching })
             .await
             .unwrap();

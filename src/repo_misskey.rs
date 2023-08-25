@@ -16,7 +16,7 @@ pub struct RepoMisskey {
 }
 
 impl RepoMisskey {
-    pub fn new<'a>(config: &'a Config) -> RepoMisskey {
+    pub fn new(config: &Config) -> RepoMisskey {
         let client = MisskeyApi::new(
             config.misskey_host.clone(),
             config.misskey_bot_token.clone(),
@@ -43,7 +43,7 @@ impl RepoMisskey {
                 visibility: "specified".to_string(),
                 visible_user_ids: vec![reply_to.user.id.clone()],
                 text: Some(message),
-                local_only: local_only,
+                local_only,
                 reply_id: Some(reply_to.id.clone()),
             })
             .await?;

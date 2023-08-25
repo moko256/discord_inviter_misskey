@@ -97,13 +97,10 @@ impl MisskeyApiStream {
             } else {
                 let msg = event.into_text()?;
 
-                match serde_json::from_str(&msg) {
-                    Ok(msg) => {
-                        on_message(msg).await;
-                    }
-                    Err(_) => {
-                        // Ignore error to ignore unknown event.
-                    }
+                if let Ok(msg) = serde_json::from_str(&msg) {
+                    on_message(msg).await;
+                } else {
+                    // Ignore error to ignore unknown event.
                 }
             }
         }
