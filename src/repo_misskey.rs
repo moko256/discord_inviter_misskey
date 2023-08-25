@@ -71,7 +71,9 @@ impl RepoMisskey {
                 .await;
 
             if let Err(err) = result {
-                println!("ERR {}", err);
+                log::warn!("Connection closed with error: {}", err);
+            } else {
+                log::warn!("Connection closed without error.");
             }
 
             let now = Utc::now();

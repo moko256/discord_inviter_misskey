@@ -267,6 +267,8 @@ dependencies = [
  "async-tungstenite 0.23.0",
  "chrono",
  "futures",
+ "log",
+ "moko256_systemd_stdio_logger",
  "reqwest",
  "serde",
  "serde_json",
@@ -727,6 +729,14 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys",
+]
+
+[[package]]
+name = "moko256_systemd_stdio_logger"
+version = "1.0.0"
+source = "git+https://github.com/moko256/moko256_systemd_stdio_logger_rust.git?tag=v1.0.0#a381f72aaa78df3b2a49dfe163d48892de0a75e5"
+dependencies = [
+ "log",
 ]
 
 [[package]]
