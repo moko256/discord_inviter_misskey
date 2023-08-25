@@ -1,0 +1,8 @@
+misskey_host = "example.com"
+misskey_bot_username = "@test"
+misskey_bot_token = "misskey-token"
+discord_bot_token = "discord-token"
+discord_channel_invite = 1234
+discord_activity_watching = "discord_activity_watching"
+bot_reply_message_ok_invite = "bot_reply_message_ok_invite"
+bot_reply_message_err_remote_user = "bot_reply_message_err_remote_user"
