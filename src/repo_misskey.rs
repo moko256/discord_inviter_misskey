@@ -1,13 +1,13 @@
 use std::error::Error;
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::Duration;
 use futures::Future;
-use tokio::time::sleep;
 
 use crate::{
     api_misskey::{MisskeyApi, Note, NotesCreateParams},
     api_misskey_stream::{MisskeyApiStream, StreamingBodyMain},
     config::Config,
+    simple_retry::simple_retry_loop_by_time,
 };
 
 pub struct RepoMisskey {
@@ -55,12 +55,8 @@ impl RepoMisskey {
     where
         F: Future<Output = ()>,
     {
-        let mut wait_next = 0;
-        let wait_max = 10;
-        let minimum_running_duration = Duration::minutes(1);
-
-        loop {
-            let minimum_running = Utc::now() + minimum_running_duration;
+        simple_retry_loop_by_time(Duration::minutes(1), Duration::minutes(30), || async {
+            // Start Streaming API connection.
             let result = self
                 .client_stream
                 .start_main(|msg| async {
@@ -75,36 +71,7 @@ impl RepoMisskey {
             } else {
                 log::warn!("Connection closed without error.");
             }
-
-            let now = Utc::now();
-
-            let wait_until;
-            if wait_next > 0 && (now > minimum_running) {
-                // Last retry was successful but error occur again.
-                wait_until = Utc::now();
-
-                wait_next = 0;
-            } else {
-                // Error looping
-                wait_until = now + Duration::minutes(wait_next);
-
-                wait_next = wait_max.min(1.max(wait_next) * 2);
-            }
-
-            Self::wait_until(wait_until).await;
-
-            println!("next {}", wait_next);
-        }
-    }
-
-    async fn wait_until(when: DateTime<Utc>) {
-        let wait_until = when - Utc::now();
-
-        match wait_until.to_std() {
-            Ok(wait_until) => {
-                sleep(wait_until).await;
-            }
-            Err(_err) => {}
-        }
+        })
+        .await;
     }
 }

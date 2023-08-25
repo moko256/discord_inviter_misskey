@@ -9,6 +9,7 @@ mod api_misskey_stream;
 mod config;
 mod repo_discord;
 mod repo_misskey;
+mod simple_retry;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn Error>> {
