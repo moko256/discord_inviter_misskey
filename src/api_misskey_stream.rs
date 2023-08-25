@@ -9,6 +9,7 @@ use crate::api_misskey::Note;
 #[derive(PartialEq, Eq, Debug, Serialize)]
 #[serde(tag = "type", content = "body")]
 #[serde(rename_all = "lowercase")]
+#[allow(dead_code)]
 pub enum StreamingMessageSend<Params, Body> {
     Connect(StreamingConnect<Params>),
     Channel(StreamingChannel<Body>),
@@ -141,6 +142,7 @@ impl MisskeyApiStream {
         .await
     }
 
+    #[allow(dead_code)]
     pub async fn start_hybrid_timeline<F1, F2>(
         &self,
         on_ready: impl Fn() -> F1,
