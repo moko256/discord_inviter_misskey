@@ -1,7 +1,7 @@
-use std::{error::Error, time::Duration};
+use std::{error::Error, sync::Arc, time::Duration};
 
 use async_tungstenite::{tokio::connect_async, tungstenite::Message};
-use futures::{Future, SinkExt, StreamExt};
+use futures::{lock::Mutex, Future, SinkExt, StreamExt};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::api_misskey::Note;
@@ -87,29 +87,73 @@ impl MisskeyApiStream {
             sink.send(Message::Text(msg)).await?;
         }
 
-        on_ready().await;
+        let ping_sending = Mutex::new(false);
 
-        while let Some(event) = stream.next().await {
-            let event = event?;
+        let sink = Arc::new(Mutex::new(sink));
 
-            if let Message::Ping(d) = &event {
-                tokio::time::sleep(Duration::from_secs(1)).await;
+        let pinging = (|| async {
+            loop {
+                let result = sink.lock().await.send(Message::Ping(Vec::new())).await;
+                match result {
+                    Ok(_) => {
+                        // Sent ping.
+                        *(ping_sending.lock().await) = true;
+                    }
+                    Err(err) => {
+                        log::info!("Failed to send ping.");
+                        return Err::<(), Box<dyn Error>>(Box::new(err));
+                    }
+                }
 
-                sink.send(Message::Pong(d.clone())).await?;
-            } else if let Message::Pong(_) = &event {
-                // Do nothing. The `event.into_text()` will return empty string.
-            } else {
-                let msg = event.into_text()?;
+                // Wait next ping timing.
+                tokio::time::sleep(Duration::from_secs(60)).await;
 
-                if let Ok(msg) = serde_json::from_str(&msg) {
-                    on_message(msg).await;
-                } else {
-                    // Ignore error to ignore unknown event.
+                // Check pong.
+                if *(ping_sending.lock().await) {
+                    log::info!("Pong unreached.");
+                    break;
                 }
             }
-        }
 
-        Ok(())
+            Ok::<(), Box<dyn Error>>(())
+        })();
+        tokio::pin!(pinging);
+
+        on_ready().await;
+
+        loop {
+            // Early return
+            tokio::select! {
+                stream_next = stream.next() => {
+
+                    if let Some(event) = stream_next {
+                        let event = event?;
+
+                        if let Message::Ping(d) = &event {
+                            sink.lock().await.send(Message::Pong(d.clone())).await?;
+                        } else if let Message::Pong(_) = &event {
+                            // The `event.into_text()` will return empty string.
+
+                            // Ping from client have reached to server successfully.
+                            *(ping_sending.lock().await) = false;
+                        } else {
+                            let msg = event.into_text()?;
+
+                            if let Ok(msg) = serde_json::from_str(&msg) {
+                                on_message(msg).await;
+                            } else {
+                                // Ignore error to ignore unknown event.
+                            }
+                        }
+                    }
+
+                },
+                // Pinging is continuous job.
+                result = &mut pinging => {
+                    return result
+                },
+            }
+        }
     }
 
     pub async fn start_main<F1, F2>(
