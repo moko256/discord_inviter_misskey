@@ -84,9 +84,8 @@ impl MisskeyApiStream {
 
         for msg in send_on_start {
             let msg = serde_json::to_string(&msg)?;
-            sink.feed(Message::Text(msg)).await?;
+            sink.send(Message::Text(msg)).await?;
         }
-        sink.flush().await?;
 
         on_ready().await;
 
