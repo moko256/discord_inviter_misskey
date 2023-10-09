@@ -4,10 +4,12 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Note {
     pub id: String,
     pub text: Option<String>,
     pub user: User,
+    pub reply_id: Option<String>,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
