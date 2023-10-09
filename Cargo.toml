@@ -30,7 +30,7 @@ async-tungstenite = "0.23"
 futures = "0.3.28"
 
 log = { version = "0.4", features = ["max_level_info"] }
-moko256_systemd_stdio_logger = { git = "https://github.com/moko256/moko256_systemd_stdio_logger_rust.git", tag = "v1.0.0" }
+moko256_systemd_stdio_logger = { git = "https://github.com/moko256/moko256_systemd_stdio_logger_rust.git", tag = "v1.0.1" }
 
 [dependencies.chrono]
 version = "0.4"
