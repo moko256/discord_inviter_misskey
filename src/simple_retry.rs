@@ -69,7 +69,7 @@ mod test {
     #[test]
     fn can_reset_test() {
         fn date_test_minutes(n: i64) -> DateTime<Utc> {
-            DateTime::from_utc(
+            DateTime::from_naive_utc_and_offset(
                 chrono::NaiveDateTime::from_timestamp_millis(n * 60 * 1000).unwrap(),
                 Utc,
             )
