@@ -3,23 +3,25 @@ Simple Misskey and Discord bot, which send Discord guild invitation URL to Missk
 
 ### Features
 Here, bot username at Misskey is `@bot`.
-- Interact the mention `@bot ...` and reply invitation URL.
+- Reply invitation URL to the mention `@bot ...`.
 
 ### Usage
 - Production
 ```bash
 installation_target="you/favorite/dir"
+mkdir -p $installation_target
 cargo build --release
-cp target/release/discord_inviter_misskey* $installation_target
+cp target/release/discord_inviter_misskey* $installation_target/
 cp bot_config-template.toml $installation_target/bot_config.toml
-# Edit `bot_config-template.toml` here.
+cd $installation_target
+# Edit `bot_config.toml` here.
 # Run `discord_inviter_misskey[.exe] here`.
 ```
 
 - Debug
 ```bash
 cp bot_config-template.toml bot_config.toml
-# Edit `bot_config-template.toml` here.
+# Edit `bot_config.toml` here.
 cargo run
 ```
 
