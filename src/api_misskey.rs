@@ -81,7 +81,8 @@ impl MisskeyApi {
             .await?;
 
         if !r.status().is_success() {
-            let error_body = r.text().await?;
+            // Decode only UTF-8.
+            let error_body = String::from_utf8_lossy(&r.bytes().await?).to_string();
             return Err(Box::new(Error { error_body }));
         }
 
