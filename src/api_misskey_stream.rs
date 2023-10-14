@@ -122,35 +122,40 @@ impl MisskeyApiStream {
         on_ready().await;
 
         loop {
-            // Early return
             tokio::select! {
-                stream_next = stream.next() => {
-
-                    if let Some(event) = stream_next {
-                        let event = event?;
-
-                        if let Message::Ping(d) = &event {
-                            sink.lock().await.send(Message::Pong(d.clone())).await?;
-                        } else if let Message::Pong(_) = &event {
-                            // The `event.into_text()` will return empty string.
-
-                            // Ping from client have reached to server successfully.
-                            *(ping_sending.lock().await) = false;
-                        } else {
-                            let msg = event.into_text()?;
-
-                            if let Ok(msg) = serde_json::from_str(&msg) {
-                                on_message(msg).await;
-                            } else {
-                                // Ignore error to ignore unknown event.
-                            }
-                        }
-                    }
-
-                },
                 // Pinging is continuous job.
                 result = &mut pinging => {
                     return result
+                },
+                stream_next = stream.next() => {
+                    match stream_next {
+                        Some(event) => {
+                            // Return websocket error if it exists.
+                            let event = event?;
+
+                            if let Message::Ping(d) = &event {
+                                sink.lock().await.send(Message::Pong(d.clone())).await?;
+                            } else if let Message::Pong(_) = &event {
+                                // The `event.into_text()` will return empty string.
+
+                                // Ping from client have reached to server successfully.
+                                *(ping_sending.lock().await) = false;
+                            } else {
+                                let msg = event.into_text()?;
+
+                                if let Ok(msg) = serde_json::from_str(&msg) {
+                                    on_message(msg).await;
+                                } else {
+                                    // Ignore error to ignore unknown event.
+                                }
+                            }
+
+                        },
+                        None => {
+                            // Unfortunately the stream closed successfully.
+                            return Ok(())
+                        },
+                    }
                 },
             }
         }
