@@ -1,4 +1,7 @@
-use std::{error::Error, sync::Arc};
+use std::{
+    error::Error,
+    sync::{Arc, OnceLock},
+};
 
 use serde_json::Number;
 use serenity::{
@@ -12,6 +15,8 @@ use serenity::{
 use tokio::task::JoinHandle;
 
 use crate::config::Config;
+
+static INVITE_URL_PARAM: OnceLock<JsonMap> = OnceLock::new();
 
 pub struct RepoDiscord {
     http: Arc<Http>,
@@ -39,23 +44,27 @@ impl RepoDiscord {
     }
 
     pub async fn generate_invite_url(&self, reason: &str) -> Result<String, Box<dyn Error>> {
-        let mut map = JsonMap::with_capacity(12);
+        let param = INVITE_URL_PARAM.get_or_init(move || {
+            let mut map = JsonMap::with_capacity(3);
 
-        map.insert(
-            "max_age".to_string(),
-            serde_json::Value::Number(Number::from(3600)), // 1 hour
-        );
+            map.insert(
+                "max_age".to_string(),
+                serde_json::Value::Number(Number::from(3600)), // 1 hour
+            );
 
-        map.insert(
-            "max_uses".to_string(),
-            serde_json::Value::Number(Number::from(1)),
-        );
+            map.insert(
+                "max_uses".to_string(),
+                serde_json::Value::Number(Number::from(1)),
+            );
 
-        map.insert("unique".to_string(), serde_json::Value::Bool(true));
+            map.insert("unique".to_string(), serde_json::Value::Bool(true));
+
+            map
+        });
 
         let invite = self
             .http
-            .create_invite(self.ch_invite, &map, Some(reason))
+            .create_invite(self.ch_invite, param, Some(reason))
             .await?;
 
         Ok(format!("https://discord.gg/{}", invite.code))
