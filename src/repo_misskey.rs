@@ -40,11 +40,11 @@ impl RepoMisskey {
     ) -> Result<(), Box<dyn Error>> {
         self.client
             .notes_create(NotesCreateParams {
-                visibility: "specified".to_string(),
-                visible_user_ids: vec![reply_to.user.id.clone()],
-                text: Some(message),
+                visibility: "specified",
+                visible_user_ids: vec![&reply_to.user.id],
+                text: Some(&message),
                 local_only,
-                reply_id: Some(reply_to.id.clone()),
+                reply_id: Some(&reply_to.id),
             })
             .await?;
 

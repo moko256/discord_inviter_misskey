@@ -10,8 +10,8 @@ use crate::api_misskey::Note;
 #[serde(tag = "type", content = "body")]
 #[serde(rename_all = "lowercase")]
 #[allow(dead_code)]
-pub enum StreamingMessageSend<Params, Body> {
-    Connect(StreamingConnect<Params>),
+pub enum StreamingMessageSend<'a, Params, Body> {
+    Connect(StreamingConnect<'a, Params>),
     Channel(StreamingChannel<Body>),
     Disconnect(StreamingDisconnect),
 }
@@ -24,9 +24,9 @@ pub enum StreamingMessageRecv<Body> {
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub struct StreamingConnect<Params> {
-    channel: String,
-    id: String,
+pub struct StreamingConnect<'a, Params> {
+    channel: &'a str,
+    id: &'a str,
     params: Params,
 }
 
@@ -68,7 +68,7 @@ impl MisskeyApiStream {
 
     async fn start<P, B, F1, F2>(
         &self,
-        send_on_start: &[StreamingMessageSend<P, B>],
+        send_on_start: &[StreamingMessageSend<'_, P, B>],
         on_ready: impl Fn() -> F1,
         on_message: impl Fn(StreamingMessageRecv<B>) -> F2,
     ) -> Result<(), Box<dyn Error>>
@@ -170,8 +170,8 @@ impl MisskeyApiStream {
         F1: Future<Output = ()>,
         F2: Future<Output = ()>,
     {
-        let channel = "main".to_string();
-        let id = "0".to_string();
+        let channel = "main";
+        let id = "0";
         let connect_msg = StreamingConnect {
             channel,
             id,
@@ -200,8 +200,8 @@ impl MisskeyApiStream {
         F1: Future<Output = ()>,
         F2: Future<Output = ()>,
     {
-        let channel = "hybridTimeline".to_string();
-        let id = "0".to_string();
+        let channel = "hybridTimeline";
+        let id = "0";
         let connect_msg = StreamingConnect {
             channel,
             id,

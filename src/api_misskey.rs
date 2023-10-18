@@ -19,7 +19,7 @@ pub struct User {
     pub host: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Error {
     pub error_body: String,
 }
@@ -33,8 +33,8 @@ impl Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub struct PostParams<T> {
-    pub i: String,
+pub struct PostParams<'a, T> {
+    pub i: &'a str,
 
     #[serde(flatten)]
     pub body: T,
@@ -42,12 +42,12 @@ pub struct PostParams<T> {
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NotesCreateParams {
-    pub visibility: String,
-    pub visible_user_ids: Vec<String>,
-    pub text: Option<String>,
+pub struct NotesCreateParams<'a> {
+    pub visibility: &'a str,
+    pub visible_user_ids: Vec<&'a str>,
+    pub text: Option<&'a str>,
     pub local_only: bool,
-    pub reply_id: Option<String>,
+    pub reply_id: Option<&'a str>,
 }
 
 pub struct MisskeyApi {
@@ -93,10 +93,10 @@ impl MisskeyApi {
 
     pub async fn notes_create(
         &self,
-        params: NotesCreateParams,
+        params: NotesCreateParams<'_>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let with_token = PostParams {
-            i: self.token.clone(),
+            i: &self.token,
             body: params,
         };
         self.post("notes/create", with_token).await
