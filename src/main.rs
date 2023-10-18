@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let misskey_task = repo_misskey.start_watching_mention(|note| async {
         let note = note;
 
-        if note.reply_id == None {
+        if note.reply_id.is_none() {
             // The note is not reply.
 
             if let Some(text) = &note.text {
