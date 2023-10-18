@@ -106,7 +106,8 @@ impl MisskeyApiStream {
                 }
 
                 // Wait next ping timing.
-                tokio::time::sleep(Duration::from_secs(60)).await;
+                // This is a solution for not only watchdog but also keep-alive.
+                tokio::time::sleep(Duration::from_secs(55)).await;
 
                 // Check pong.
                 if *(ping_sending.lock().await) {
@@ -201,7 +202,7 @@ impl MisskeyApiStream {
         F2: Future<Output = ()>,
     {
         let channel = "hybridTimeline";
-        let id = "0";
+        let id: &str = "0";
         let connect_msg = StreamingConnect {
             channel,
             id,
