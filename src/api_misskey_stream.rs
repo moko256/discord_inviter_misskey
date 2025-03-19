@@ -27,7 +27,8 @@ pub enum StreamingMessageRecv<Body> {
 pub struct StreamingConnect<'a, Params> {
     channel: &'a str,
     id: &'a str,
-    params: Params,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    params: Option<Params>,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -176,7 +177,7 @@ impl MisskeyApiStream {
         let connect_msg = StreamingConnect {
             channel,
             id,
-            params: (),
+            params: None,
         };
         self.start(
             &[StreamingMessageSend::<(), StreamingBodyMain>::Connect(
@@ -206,7 +207,7 @@ impl MisskeyApiStream {
         let connect_msg = StreamingConnect {
             channel,
             id,
-            params: (),
+            params: None,
         };
         self.start(
             &[StreamingMessageSend::<(), StreamingBodyTimeline>::Connect(
